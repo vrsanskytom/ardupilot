@@ -618,13 +618,17 @@ static const ap_message STREAM_RAW_SENSORS_msgs[] = {
 static const ap_message STREAM_EXTENDED_STATUS_msgs[] = {
     MSG_SYS_STATUS,
     MSG_POWER_STATUS,
+#if HAL_WITH_MCU_MONITORING
     MSG_MCU_STATUS,
+#endif
     MSG_MEMINFO,
     MSG_CURRENT_WAYPOINT,
     MSG_GPS_RAW,
     MSG_GPS_RTK,
+#if GPS_MAX_RECEIVERS > 1
     MSG_GPS2_RAW,
     MSG_GPS2_RTK,
+#endif
     MSG_NAV_CONTROLLER_OUTPUT,
 #if AP_FENCE_ENABLED
     MSG_FENCE_STATUS,
@@ -645,7 +649,9 @@ static const ap_message STREAM_RC_CHANNELS_msgs[] = {
 };
 static const ap_message STREAM_EXTRA1_msgs[] = {
     MSG_ATTITUDE,
+#if AP_SIM_ENABLED
     MSG_SIMSTATE,
+#endif
     MSG_AHRS2,
 #if AP_RPM_ENABLED
     MSG_RPM,
@@ -653,7 +659,9 @@ static const ap_message STREAM_EXTRA1_msgs[] = {
     MSG_AOA_SSA,
     MSG_PID_TUNING,
     MSG_LANDING,
+#if HAL_WITH_ESC_TELEM
     MSG_ESC_TELEMETRY,
+#endif
 #if HAL_EFI_ENABLED
     MSG_EFI_STATUS,
 #endif
@@ -676,8 +684,12 @@ static const ap_message STREAM_EXTRA3_msgs[] = {
 #if AP_BATTERY_ENABLED
     MSG_BATTERY_STATUS,
 #endif
+#if HAL_MOUNT_ENABLED
     MSG_GIMBAL_DEVICE_ATTITUDE_STATUS,
+#endif
+#if AP_OPTICALFLOW_ENABLED
     MSG_OPTICAL_FLOW,
+#endif
 #if COMPASS_CAL_ENABLED
     MSG_MAG_CAL_REPORT,
     MSG_MAG_CAL_PROGRESS,
@@ -690,7 +702,9 @@ static const ap_message STREAM_PARAMS_msgs[] = {
 };
 static const ap_message STREAM_ADSB_msgs[] = {
     MSG_ADSB_VEHICLE,
+#if AP_AIS_ENABLED
     MSG_AIS_VESSEL,
+#endif
 };
 
 const struct GCS_MAVLINK::stream_entries GCS_MAVLINK::all_stream_entries[] = {
@@ -804,7 +818,7 @@ MAV_RESULT GCS_MAVLINK_Plane::handle_command_int_do_reposition(const mavlink_com
         return MAV_RESULT_DENIED;
     }
 
-    if (is_zero(packet.param4)) {
+    if (isnan(packet.param4) || is_zero(packet.param4)) {
         requested_position.loiter_ccw = 0;
     } else {
         requested_position.loiter_ccw = 1;
@@ -1101,6 +1115,7 @@ void GCS_MAVLINK_Plane::convert_MAV_CMD_NAV_TAKEOFF_to_COMMAND_INT(const mavlink
     out.z = -in.param7;  // up -> down
 }
 
+#if AP_MAVLINK_COMMAND_LONG_ENABLED
 void GCS_MAVLINK_Plane::convert_COMMAND_LONG_to_COMMAND_INT(const mavlink_command_long_t &in, mavlink_command_int_t &out, MAV_FRAME frame)
 {
     switch (in.command) {
@@ -1110,6 +1125,7 @@ void GCS_MAVLINK_Plane::convert_COMMAND_LONG_to_COMMAND_INT(const mavlink_comman
     }
     return GCS_MAVLINK::convert_COMMAND_LONG_to_COMMAND_INT(in, out, frame);
 }
+#endif  // AP_MAVLINK_COMMAND_LONG_ENABLED
 
 MAV_RESULT GCS_MAVLINK_Plane::handle_command_MAV_CMD_NAV_TAKEOFF(const mavlink_command_int_t &packet)
 {
@@ -1379,7 +1395,7 @@ void GCS_MAVLINK_Plane::handleMessage(const mavlink_message_t &msg)
     } // end switch
 } // end handle mavlink
 
-MAV_RESULT GCS_MAVLINK_Plane::handle_command_do_set_mission_current(const mavlink_command_long_t &packet)
+MAV_RESULT GCS_MAVLINK_Plane::handle_command_do_set_mission_current(const mavlink_command_int_t &packet)
 {
     const MAV_RESULT result = GCS_MAVLINK::handle_command_do_set_mission_current(packet);
     if (result != MAV_RESULT_ACCEPTED) {

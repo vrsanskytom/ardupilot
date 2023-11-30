@@ -405,6 +405,7 @@ struct PACKED log_PID {
     float   I;
     float   D;
     float   FF;
+    float   DFF;
     float   Dmod;
     float   slew_rate;
     uint8_t flags;
@@ -548,6 +549,7 @@ struct PACKED log_Rally {
     int32_t latitude;
     int32_t longitude;
     int16_t altitude;
+    uint8_t flags;
 };
 
 struct PACKED log_Performance {
@@ -678,10 +680,10 @@ struct PACKED log_VER {
 // UNIT messages define units which can be referenced by FMTU messages
 // FMTU messages associate types (e.g. centimeters/second/second) to FMT message fields
 
-#define PID_LABELS "TimeUS,Tar,Act,Err,P,I,D,FF,Dmod,SRate,Flags"
-#define PID_FMT    "QfffffffffB"
-#define PID_UNITS  "s----------"
-#define PID_MULTS  "F----------"
+#define PID_LABELS "TimeUS,Tar,Act,Err,P,I,D,FF,DFF,Dmod,SRate,Flags"
+#define PID_FMT    "QffffffffffB"
+#define PID_UNITS  "s-----------"
+#define PID_MULTS  "F-----------"
 
 #define PIDx_FMT "Qffffffff"
 #define PIDx_UNITS "smmnnnooo"
@@ -909,6 +911,7 @@ struct PACKED log_VER {
 // @Field: I: integral part of PID
 // @Field: D: derivative part of PID
 // @Field: FF: controller feed-forward portion of response
+// @Field: DFF: controller derivative feed-forward portion of response
 // @Field: Dmod: scaler applied to D gain to reduce limit cycling
 // @Field: SRate: slew rate used in slew limiter
 // @Field: Flags: bitmask of PID state flags
@@ -968,6 +971,7 @@ struct PACKED log_VER {
 // @Field: Lat: latitude of rally point
 // @Field: Lng: longitude of rally point
 // @Field: Alt: altitude of rally point
+// @Field: Flags: altitude frame flags
 
 // @LoggerMessage: RCI2
 // @Description: (More) RC input channels to vehicle
@@ -1286,7 +1290,7 @@ LOG_STRUCTURE_FROM_FENCE \
     { LOG_DF_FILE_STATS, sizeof(log_DSF), \
       "DSF", "QIHIIII", "TimeUS,Dp,Blk,Bytes,FMn,FMx,FAv", "s--b---", "F--0---" }, \
     { LOG_RALLY_MSG, sizeof(log_Rally), \
-      "RALY", "QBBLLh", "TimeUS,Tot,Seq,Lat,Lng,Alt", "s--DUm", "F--GGB" },  \
+      "RALY", "QBBLLhB", "TimeUS,Tot,Seq,Lat,Lng,Alt,Flags", "s--DUm-", "F--GGB-" },  \
     { LOG_MAV_MSG, sizeof(log_MAV),   \
       "MAV", "QBHHHBHH",   "TimeUS,chan,txp,rxp,rxdp,flags,ss,tf", "s#----s-", "F-000-C-" },   \
 LOG_STRUCTURE_FROM_VISUALODOM \

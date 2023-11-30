@@ -27,6 +27,7 @@
 /// change in your local copy of APM_Config.h.
 ///
 #include "APM_Config.h"
+#include <AP_ADSB/AP_ADSB_config.h>
 #include <AP_Follow/AP_Follow_config.h>
 
 
@@ -637,4 +638,12 @@
 
 #ifndef AC_CUSTOMCONTROL_MULTI_ENABLED
 #define AC_CUSTOMCONTROL_MULTI_ENABLED FRAME_CONFIG == MULTICOPTER_FRAME && AP_CUSTOMCONTROL_ENABLED
+#endif
+
+#ifndef AC_PAYLOAD_PLACE_ENABLED
+#define AC_PAYLOAD_PLACE_ENABLED 1
+#endif
+
+#ifndef USER_PARAMS_ENABLED
+  #define USER_PARAMS_ENABLED DISABLED
 #endif

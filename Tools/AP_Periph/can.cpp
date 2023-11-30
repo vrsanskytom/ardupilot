@@ -1136,8 +1136,9 @@ void AP_Periph_FW::processTx(void)
                   active if it has had a successful transmit in the
                   last 2 seconds
                  */
-                const auto *stats = _ins.iface->get_statistics();
-                if (stats == nullptr || now_us - stats->last_transmit_us < 2000000UL) {
+                volatile const auto *stats = _ins.iface->get_statistics();
+                uint64_t last_transmit_us = stats->last_transmit_us;
+                if (stats == nullptr || AP_HAL::micros64() - last_transmit_us < 2000000UL) {
                     sent = false;
                 }
             } else {
@@ -1574,6 +1575,16 @@ void AP_Periph_FW::can_start()
         g.can_baudrate[0].set_and_save(1000000);
     }
 #endif // HAL_PERIPH_ENFORCE_AT_LEAST_ONE_PORT_IS_UAVCAN_1MHz
+
+#ifdef HAL_GPIO_PIN_GPIO_CAN1_TERM
+    palWriteLine(HAL_GPIO_PIN_GPIO_CAN1_TERM, g.can_terminate[0]);
+#endif
+#ifdef HAL_GPIO_PIN_GPIO_CAN2_TERM
+    palWriteLine(HAL_GPIO_PIN_GPIO_CAN2_TERM, g.can_terminate[1]);
+#endif
+#ifdef HAL_GPIO_PIN_GPIO_CAN3_TERM
+    palWriteLine(HAL_GPIO_PIN_GPIO_CAN3_TERM, g.can_terminate[2]);
+#endif
 
     for (uint8_t i=0; i<HAL_NUM_CAN_IFACES; i++) {
 #if CONFIG_HAL_BOARD == HAL_BOARD_CHIBIOS

@@ -220,7 +220,9 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #if AP_RPM_ENABLED
     SCHED_TASK_CLASS(AP_RPM,               &copter.rpm_sensor,          update,          40, 200, 129),
 #endif
+#if AP_TEMPCALIBRATION_ENABLED
     SCHED_TASK_CLASS(AP_TempCalibration,   &copter.g2.temp_calibration, update,          10, 100, 135),
+#endif
 #if HAL_ADSB_ENABLED
     SCHED_TASK(avoidance_adsb_update, 10,    100, 138),
 #endif
@@ -669,6 +671,13 @@ void Copter::one_hz_loop()
 #endif
 
     AP_Notify::flags.flying = !ap.land_complete;
+
+    // slowly update the PID notches with the average loop rate
+    attitude_control->set_notch_sample_rate(AP::scheduler().get_filtered_loop_rate_hz());
+    pos_control->get_accel_z_pid().set_notch_sample_rate(AP::scheduler().get_filtered_loop_rate_hz());
+#if AC_CUSTOMCONTROL_MULTI_ENABLED == ENABLED
+    custom_control.set_notch_sample_rate(AP::scheduler().get_filtered_loop_rate_hz());
+#endif
 }
 
 void Copter::init_simple_bearing()

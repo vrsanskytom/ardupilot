@@ -311,17 +311,17 @@ void GCS_MAVLINK_Copter::send_pid_tuning()
     }
 }
 
+#if AP_WINCH_ENABLED
 // send winch status message
 void GCS_MAVLINK_Copter::send_winch_status() const
 {
-#if AP_WINCH_ENABLED
     AP_Winch *winch = AP::winch();
     if (winch == nullptr) {
         return;
     }
     winch->send_status(*this);
-#endif
 }
+#endif
 
 uint8_t GCS_MAVLINK_Copter::sysid_my_gcs() const
 {
@@ -503,13 +503,17 @@ static const ap_message STREAM_RAW_SENSORS_msgs[] = {
 static const ap_message STREAM_EXTENDED_STATUS_msgs[] = {
     MSG_SYS_STATUS,
     MSG_POWER_STATUS,
+#if HAL_WITH_MCU_MONITORING
     MSG_MCU_STATUS,
+#endif
     MSG_MEMINFO,
     MSG_CURRENT_WAYPOINT, // MISSION_CURRENT
     MSG_GPS_RAW,
     MSG_GPS_RTK,
+#if GPS_MAX_RECEIVERS > 1
     MSG_GPS2_RAW,
     MSG_GPS2_RTK,
+#endif
     MSG_NAV_CONTROLLER_OUTPUT,
 #if AP_FENCE_ENABLED
     MSG_FENCE_STATUS,
@@ -527,7 +531,9 @@ static const ap_message STREAM_RC_CHANNELS_msgs[] = {
 };
 static const ap_message STREAM_EXTRA1_msgs[] = {
     MSG_ATTITUDE,
+#if AP_SIM_ENABLED
     MSG_SIMSTATE,
+#endif
     MSG_AHRS2,
     MSG_PID_TUNING // Up to four PID_TUNING messages are sent, depending on GCS_PID_MASK parameter
 };
@@ -546,8 +552,12 @@ static const ap_message STREAM_EXTRA3_msgs[] = {
 #if AP_BATTERY_ENABLED
     MSG_BATTERY_STATUS,
 #endif
+#if HAL_MOUNT_ENABLED
     MSG_GIMBAL_DEVICE_ATTITUDE_STATUS,
+#endif
+#if AP_OPTICALFLOW_ENABLED
     MSG_OPTICAL_FLOW,
+#endif
 #if COMPASS_CAL_ENABLED
     MSG_MAG_CAL_REPORT,
     MSG_MAG_CAL_PROGRESS,
@@ -557,9 +567,15 @@ static const ap_message STREAM_EXTRA3_msgs[] = {
 #if AP_RPM_ENABLED
     MSG_RPM,
 #endif
+#if HAL_WITH_ESC_TELEM
     MSG_ESC_TELEMETRY,
+#endif
+#if HAL_GENERATOR_ENABLED
     MSG_GENERATOR_STATUS,
+#endif
+#if AP_WINCH_ENABLED
     MSG_WINCH_STATUS,
+#endif
 #if HAL_EFI_ENABLED
     MSG_EFI_STATUS,
 #endif
@@ -569,7 +585,9 @@ static const ap_message STREAM_PARAMS_msgs[] = {
 };
 static const ap_message STREAM_ADSB_msgs[] = {
     MSG_ADSB_VEHICLE,
+#if AP_AIS_ENABLED
     MSG_AIS_VESSEL,
+#endif
 };
 
 const struct GCS_MAVLINK::stream_entries GCS_MAVLINK::all_stream_entries[] = {
@@ -873,6 +891,7 @@ MAV_RESULT GCS_MAVLINK_Copter::handle_MAV_CMD_NAV_TAKEOFF(const mavlink_command_
         return MAV_RESULT_ACCEPTED;
 }
 
+#if AP_MAVLINK_COMMAND_LONG_ENABLED
 bool GCS_MAVLINK_Copter::mav_frame_for_command_long(MAV_FRAME &frame, MAV_CMD packet_command) const
 {
     if (packet_command == MAV_CMD_NAV_TAKEOFF ||
@@ -882,6 +901,7 @@ bool GCS_MAVLINK_Copter::mav_frame_for_command_long(MAV_FRAME &frame, MAV_CMD pa
     }
     return GCS_MAVLINK::mav_frame_for_command_long(frame, packet_command);
 }
+#endif
 
 
 MAV_RESULT GCS_MAVLINK_Copter::handle_MAV_CMD_CONDITION_YAW(const mavlink_command_int_t &packet)

@@ -494,11 +494,6 @@ private:
         // have we checked for an auto-land?
         bool checked_for_autoland;
 
-        // Altitude threshold to complete a takeoff command in autonomous modes.  Centimeters
-        // are we in idle mode? used for balloon launch to stop servo
-        // movement until altitude is reached
-        bool idle_mode;
-
         // are we in VTOL mode in AUTO?
         bool vtol_mode;
 
@@ -591,10 +586,12 @@ private:
     // this controls throttle suppression in auto modes
     bool throttle_suppressed;
 
+#if AP_BATTERY_WATT_MAX_ENABLED
     // reduce throttle to eliminate battery over-current
     int8_t  throttle_watt_limit_max;
     int8_t  throttle_watt_limit_min; // for reverse thrust
     uint32_t throttle_watt_limit_timer_ms;
+#endif
 
     AP_FixedWing::FlightStage flight_stage = AP_FixedWing::FlightStage::NORMAL;
 
@@ -930,7 +927,6 @@ private:
     void do_loiter_unlimited(const AP_Mission::Mission_Command& cmd);
     void do_loiter_turns(const AP_Mission::Mission_Command& cmd);
     void do_loiter_time(const AP_Mission::Mission_Command& cmd);
-    void do_altitude_wait(const AP_Mission::Mission_Command& cmd);
     void do_continue_and_change_alt(const AP_Mission::Mission_Command& cmd);
     void do_loiter_to_alt(const AP_Mission::Mission_Command& cmd);
     void do_vtol_takeoff(const AP_Mission::Mission_Command& cmd);
@@ -1096,6 +1092,7 @@ private:
     void set_servos_idle(void);
     void set_servos();
     void set_servos_controlled(void);
+    void set_takeoff_expected(void);
     void set_servos_old_elevons(void);
     void set_servos_flaps(void);
     void set_landing_gear(void);

@@ -31,8 +31,8 @@ extern const AP_HAL::HAL& hal;
 const AP_Param::GroupInfo AP_Networking::Port::var_info[] = {
     // @Param: TYPE
     // @DisplayName: Port type
-    // @Description: Port type for network serial port. For the two client types a valid destination IP address must be set. For the two server types either 0.0.0.0 or a local address can be used.
-    // @Values: 0:Disabled, 1:UDP client, 2:TCP client, 3:TCP server
+    // @Description: Port type for network serial port. For the two client types a valid destination IP address must be set. For the two server types either 0.0.0.0 or a local address can be used. The UDP client type will use broadcast if the IP is set to 255.255.255.255 and will use UDP multicast if the IP is in the multicast address range.
+    // @Values: 0:Disabled, 1:UDP client, 2:UDP server, 3:TCP client, 4:TCP server
     // @RebootRequired: True
     // @User: Advanced
     AP_GROUPINFO_FLAGS("TYPE", 1,  AP_Networking::Port, type, 0, AP_PARAM_FLAG_ENABLE),
@@ -41,7 +41,7 @@ const AP_Param::GroupInfo AP_Networking::Port::var_info[] = {
     // @DisplayName: protocol
     // @Description: protocol
     // @User: Advanced
-    // @CopyFieldsFrom: SERIAL0_PROTOCOL
+    // @CopyFieldsFrom: SERIAL1_PROTOCOL
     AP_GROUPINFO("PROTOCOL", 2,  AP_Networking::Port, state.protocol, 0),
 
     // @Group: IP
@@ -171,22 +171,11 @@ void AP_Networking::Port::tcp_client_init(void)
 }
 
 /*
-  wait for networking stack to be up
- */
-void AP_Networking::Port::wait_startup(void)
-{
-    while (!hal.scheduler->is_system_initialized()) {
-        hal.scheduler->delay(100);
-    }
-    hal.scheduler->delay(1000);
-}
-
-/*
   update a UDP client
  */
 void AP_Networking::Port::udp_client_loop(void)
 {
-    wait_startup();
+    AP::network().startup_wait();
 
     const char *dest = ip.get_str();
     if (!sock->connect(dest, port.get())) {
@@ -214,7 +203,7 @@ void AP_Networking::Port::udp_client_loop(void)
  */
 void AP_Networking::Port::udp_server_loop(void)
 {
-    wait_startup();
+    AP::network().startup_wait();
 
     const char *addr = ip.get_str();
     if (!sock->bind(addr, port.get())) {
@@ -241,7 +230,7 @@ void AP_Networking::Port::udp_server_loop(void)
  */
 void AP_Networking::Port::tcp_server_loop(void)
 {
-    wait_startup();
+    AP::network().startup_wait();
 
     const char *addr = ip.get_str();
     if (!listen_sock->bind(addr, port.get()) || !listen_sock->listen(1)) {
@@ -285,7 +274,7 @@ void AP_Networking::Port::tcp_server_loop(void)
  */
 void AP_Networking::Port::tcp_client_loop(void)
 {
-    wait_startup();
+    AP::network().startup_wait();
 
     close_on_recv_error = true;
 
@@ -353,9 +342,11 @@ bool AP_Networking::Port::send_receive(void)
         // handle outgoing packets
         uint32_t available = writebuffer->available();
         available = MIN(300U, available);
+#if HAL_GCS_ENABLED
         if (packetise) {
             available = mavlink_packetise(*writebuffer, available);
         }
+#endif
         if (available > 0) {
             uint8_t buf[available];
             auto n = writebuffer->peekbytes(buf, available);

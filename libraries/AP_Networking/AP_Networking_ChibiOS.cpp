@@ -37,7 +37,7 @@ bool AP_Networking_ChibiOS::allocate_buffers()
                                 sizeof(uint32_t)*STM32_MAC_TRANSMIT_BUFFERS*AP_NETWORKING_EXTERN_MAC_BUFFER_SIZE; // typically == 9240
 
     // ensure that we allocate 32-bit aligned memory, and mark it non-cacheable
-    uint32_t size = 2;
+    uint32_t size = 1;
     uint8_t rasr = 0;
     // find size closest to power of 2
     while (size < total_size) {
@@ -101,10 +101,6 @@ bool AP_Networking_ChibiOS::init()
         GCS_SEND_TEXT(MAV_SEVERITY_ERROR, "NET: macInit failed");
         return false;
     }
-
-#if !AP_NETWORKING_DHCP_AVAILABLE
-    frontend.set_dhcp_enable(false);
-#endif
 
     lwip_options = new lwipthread_opts;
 

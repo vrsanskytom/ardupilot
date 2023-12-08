@@ -1,7 +1,7 @@
 # Onboard FMU on Airvolute DCS2.Pilot board
 
 DroneCore 2.0 is a modular AI-driven open architecture autopilot designed for complex use cases that combines high computational processing power, redundant connectivity, small size, and low weight.The autopilot represents a one-stop-solution for developers integrating the functionality of carrier board, companion computer, and power distribution board into a single compact form factor.
-
+This system usually uses a "CUBE" autopilot as its primary FMU, but can use an onboard STM32H743 as the FMU. This board definition and firmware on `the ArduPilot firmware server <https://firmware.ardupilot.org>`__ is for this secondary FMU
 For more informations on DCS2.Pilot board see:
 https://docs.airvolute.com/dronecore-autopilot/dcs2
 
@@ -34,7 +34,7 @@ JST GH 1.25mm pitch, 3-Pin
 
 Matching connector JST GHR-03V-S.
 
-RC input is configured on the PPM_SBUS_PROT pin as part of the PPM connector. Pin is connected to UART3_RX and also to analog input on TIM3_CH1. This pin supports all RC protocols, but for it to be enabled, it is necessary to set SERIAL3 as RCIN. Also RC input is shared with primary FMU, so it is default disabled on secondary FMU.
+RC input is configured on the PPM_SBUS_PROT pin as part of the PPM connector. Pin is connected to UART3_RX and also to analog input on TIM3_CH1. This pin supports all unidirectional RC protocols, but for it to be enabled, it is necessary to set SERIAL3_PROTOCOL as RCIN. Also RC input is shared with primary FMU, so it is default disabled on this secondary FMU.
 
 5V supply is limited to 1A by internal current limiter.
 <table border="1" class="docutils">
@@ -247,7 +247,7 @@ Matching connector JST GHR-04V-S.
 - SERIAL0 -> USB (Default baud: 115200)
 - SERIAL1 -> UART1 (FMU SEC) (Default baud: 57600, Default protocol: Mavlink2 (2))
 - SERIAL2 -> UART2 (FMU SEC) (Default baud: 57600, Default protocol: Mavlink2 (2))
-- SERIAL3 -> UART3 (PPM) (Default protocol: None, Serial can only be set to protocol: RCIN (23))
+- SERIAL3 -> UART3 (RX pin only labeled as PPM on PPM connector) (Since this is a secondary FMU, default protocol is set to NONE instead of RCIN (23))
   
 UARTs do not have RTS/CTS. UARTs 1 and 2 are routed to FMU_SEC. connector.
 
